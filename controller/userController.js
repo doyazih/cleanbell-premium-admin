@@ -1,3 +1,6 @@
+
+const Users = global.dbmodels.Users;
+
 eval(require('fs').readFileSync('./public/js/types.js').toString());
 
 const Q = require('q');
@@ -9,12 +12,15 @@ exports.createUser = (req, res, next) => {
 
 exports.getUser = (req, res, next) => {
 
-    let user = {
-        seq: 0,
-        id: 'tofufather',
-        name: '권혁준',
-        authority: AuthorityTypes.Administrator
-    }
+    return Users.findOne({
+        where: {
+            id: req.query.id
+        }
+    })
+    .then(function (user) {
+        
+        delete user.dataValues.passwordHash;
 
-    return Q(user);
+        return user;
+    });
 }

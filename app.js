@@ -19,44 +19,57 @@ global.config = config;
 
 const app = express();
 
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+require('./model/db/connector')
+    .then(function (models) {
 
-const preProcessor = require('./controller/baseController').preProcess;
-app.use(preProcessor);
+        global.dbmodels = models;
+        
+        init();
+    });
 
-let swaggerOptions = {
-    swaggerDefinition: {
-        info: {
-            title: 'Cleanbell Premium API Docs',
-            description: '',
-            version: APP_VERSION,
-            contact: {
-                email: 'cleanbell1104@gmail.com'
-            }
+const init = function () {
+
+    app.set('view engine', 'ejs');
+    app.use(express.static('public'));
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(cookieParser());
+
+    require('./controller/authController').initialize(app);
+    
+    const preProcessor = require('./controller/baseController').preProcess;
+    app.use(preProcessor);
+    
+    let swaggerOptions = {
+        swaggerDefinition: {
+            info: {
+                title: 'Cleanbell Premium API Docs',
+                description: '',
+                version: APP_VERSION,
+                contact: {
+                    email: 'cleanbell1104@gmail.com'
+                }
+            },
+            host: config.web.host + ':' + config.web.port,
+            basePath: '/api',
+            schemes: ['http']
         },
-        host: config.web.host + ':' + config.web.port,
-        basePath: '/api',
-        schemes: ['http']
-    },
-    apis: []
-};
-
-let swaggerSpec = swaggerJsDoc(swaggerOptions);
-
-require('./route')(app, swaggerSpec);
-require('./model')(swaggerSpec);
-
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {}));
-
-app.use(function(err, req, res, next) {
-    console.error(err.stack);
-    res.status(500).send('Unexpected Error');
-});
-
-app.listen(config.web.port, function () {
-    console.log('Cleanbell Premium Admin listening on port %d', config.web.port);
-});
+        apis: []
+    };
+    
+    let swaggerSpec = swaggerJsDoc(swaggerOptions);
+    
+    require('./route')(app, swaggerSpec);
+    require('./model')(swaggerSpec);
+    
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {}));
+    
+    app.use(function (err, req, res, next) {
+        console.error(err.stack);
+        res.status(500).send('Unexpected Error');
+    });
+    
+    app.listen(config.web.port, function () {
+        console.log('Cleanbell Premium Admin listening on port %d', config.web.port);
+    });
+}

@@ -6,8 +6,17 @@ const controller = require('../controller/homeController');
 
 module.exports = function (swaggerSpec) {
 
-    router.get('/', base.render(controller.index));
-    router.get('main', base.render(controller.index));
+    router.get(
+        '/', 
+        base.requiredAuthentication,
+        base.render(controller.index)
+    );
+
+    router.get(
+        'main',
+        base.requiredAuthentication,
+        base.render(controller.index)
+    );
     
     return router;
 }

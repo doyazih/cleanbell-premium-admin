@@ -35,12 +35,12 @@ module.exports = function (swaggerSpec) {
                 }
             }
         }),
-        base.authenticate(),
+        base.requiredAuthentication,
         base.validate([
             checkBody('id').not().isEmpty(),
             checkBody('name').not().isEmpty(),
             checkBody('email').optional(),
-            checkBody('authority').isIn([AuthorityTypes.Manager, AuthorityTypes.Administrator]),
+            checkBody('authority').isIn([AuthorityTypes.Manager.code, AuthorityTypes.Administrator.code]),
         ]), 
         base.response(controller.createUser)
     );
@@ -68,7 +68,7 @@ module.exports = function (swaggerSpec) {
                 }
             }
         }),
-        base.authenticate(),
+        base.requiredAuthentication,
         base.validate([
             checkQuery('id').not().isEmpty()
         ]),

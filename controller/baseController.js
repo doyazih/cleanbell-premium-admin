@@ -8,6 +8,9 @@ const logger = log4js.getLogger();
 
 const util = require('util');
 
+const auth = require('./authController');
+const login = require('./loginController');
+
 const initializeView = (req, res, next) => {
     res.viewbag = {};
     res.viewbag.title = 'Cleanbell Premium';
@@ -18,7 +21,7 @@ const initializeView = (req, res, next) => {
 }
 
 exports.preProcess = (req, res, next) => {
-    res.viewbag = {};    
+    res.viewbag = {};
     next();
 }
 
@@ -52,6 +55,41 @@ exports.response = function (action) {
         catch (err) {
             return errorHandler(err, res);
         }
+    }
+}
+
+
+exports.requiredAuthentication = function (req, res, next) {
+    
+    if (req.cookies.user && req.cookies.user.access_token) {
+
+        var decoded = login.decodeToken(req.cookies.user.access_token);
+        if (decoded && decoded.userId && decoded.userId != '') {
+
+            return auth.isAuthenticated(decoded.userId)
+            .then(function (user) {
+                if (user) {
+                    
+                    req.session = {
+                        user: {
+                            id: user.id,
+                            name: user.name,
+                        }
+                    }
+
+                    next();
+                }
+                else {
+                    res.redirect('/login');
+                }
+            })
+        }
+        else {
+            res.redirect('/login');
+        }
+    }
+    else {
+        res.redirect('/login');
     }
 }
 
@@ -123,4 +161,3 @@ const errorHandler = function (err, res) {
 
     return;
 }
-
